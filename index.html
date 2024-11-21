@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elektrik Devresi Mantık Simülasyonu</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f9;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+    .bit-row {
+      display: flex;
+      justify-content: center;
+      margin: 10px 0;
+    }
+    .bit {
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+      font-size: 18px;
+      text-align: center;
+      border: 2px solid #ccc;
+      background-color: #ddd;
+      cursor: pointer;
+      user-select: none;
+      margin: 0 5px;
+      border-radius: 5px;
+    }
+    .bit.on {
+      background-color: green;
+      color: white;
+    }
+    .bit.off {
+      background-color: red;
+      color: white;
+    }
+    .gate-row {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .gate {
+      margin: 0 10px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .gate .status {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      margin: 0 auto;
+      line-height: 60px;
+      background-color: #ccc;
+    }
+    .gate.active .status {
+      background-color: yellow;
+    }
+    .gate.xor .status {
+      background-color: #007BFF;
+    }
+    .gate.and .status {
+      background-color: #FF5733;
+    }
+    .output-row {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .output {
+      margin: 0 10px;
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+      font-size: 18px;
+      text-align: center;
+      border: 2px solid #ccc;
+      background-color: #ddd;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 10px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 1.2em;
+      color: #007BFF;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Elektrik Devresi Mantık Simülasyonu</h1>
+    <div class="bit-row" id="inputA"></div>
+    <div class="bit-row" id="inputB"></div>
+    <button onclick="startSimulation()">Başlat</button>
+    <div class="gate-row">
+      <div class="gate xor">
+        <div class="status">XOR</div>
+        Toplam
+      </div>
+      <div class="gate and">
+        <div class="status">AND</div>
+        Taşıma
+      </div>
+    </div>
+    <div class="output-row" id="outputRow"></div>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    // Binary girişleri oluştur
+    function createBits(rowId) {
+      const row = document.getElementById(rowId);
+      for (let i = 0; i < 8; i++) {
+        const bit = document.createElement('div');
+        bit.className = 'bit off';
+        bit.textContent = '0';
+        bit.onclick = () => toggleBit(bit);
+        row.appendChild(bit);
+      }
+    }
+
+    // Binary girişleri kontrol et
+    function toggleBit(bit) {
+      if (bit.classList.contains('on')) {
+        bit.classList.remove('on');
+        bit.classList.add('off');
+        bit.textContent = '0';
+      } else {
+        bit.classList.remove('off');
+        bit.classList.add('on');
+        bit.textContent = '1';
+      }
+    }
+
+    // Simülasyonu başlat
+    function startSimulation() {
+      const inputA = Array.from(document.querySelectorAll('#inputA .bit')).map(b => parseInt(b.textContent));
+      const inputB = Array.from(document.querySelectorAll('#inputB .bit')).map(b => parseInt(b.textContent));
+
+      const outputRow = document.getElementById('outputRow');
+      outputRow.innerHTML = ''; // Çıkışı temizle
+
+      let carry = 0;
+      const result = [];
+      let step = 0;
+
+      function processBit() {
+        if (step >= 8) {
+          document.getElementById('result').textContent = `Sonuç: ${result.reverse().join('')} (Binary), ${parseInt(result.join(''), 2)} (Decimal)`;
+          return;
+        }
+
+        const bitA = inputA[7 - step];
+        const bitB = inputB[7 - step];
+
+        const xorResult = bitA ^ bitB ^ carry;
+        const andResult = (bitA & bitB) | (bitA & carry) | (bitB & carry);
+
+        const outputBit = document.createElement('div');
+        outputBit.className = `output ${xorResult ? 'on' : 'off'}`;
+        outputBit.textContent = xorResult;
+        outputRow.prepend(outputBit);
+
+        document.querySelector('.gate.xor .status').classList.add('active');
+        document.querySelector('.gate.and .status').classList.add('active');
+
+        setTimeout(() => {
+          document.querySelector('.gate.xor .status').classList.remove('active');
+          document.querySelector('.gate.and .status').classList.remove('active');
+          carry = andResult;
+          result.push(xorResult);
+          step++;
+          processBit();
+        }, 1000);
+      }
+
+      processBit();
+    }
+
+    // Girişleri oluştur
+    createBits('inputA');
+    createBits('inputB');
+  </script>
+</body>
+</html>
